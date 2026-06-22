@@ -1,0 +1,15 @@
+# AulaVault generated output
+courses/
+downloads/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv
+venv/
