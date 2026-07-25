@@ -5,7 +5,7 @@ from typing import Optional
 class SessionData(BaseModel):
     moodle_session: str
     sesskey: str
-    base_url: str = "https://aulasvirtuales.santotomas.cl"
+    base_url: str = ""
 
 
 class Course(BaseModel):

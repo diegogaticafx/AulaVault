@@ -1,15 +1,14 @@
+from urllib.parse import urljoin
 import httpx
 from bs4 import BeautifulSoup
 from .models import SessionData
-
-MOODLE_BASE = "https://aulasvirtuales.santotomas.cl"
 
 
 class MoodleSession:
     def __init__(self, data: SessionData):
         self.data = data
         self.client = httpx.Client(
-            base_url=MOODLE_BASE,
+            base_url=data.base_url,
             cookies={"MoodleSession": data.moodle_session},
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -66,6 +65,11 @@ class MoodleSession:
 
     def get_raw(self, url: str) -> httpx.Response:
         return self.get_response(url)
+
+    def abs_url(self, path: str) -> str:
+        if path.startswith("http"):
+            return path
+        return urljoin(self.data.base_url, path)
 
     def close(self):
         self.client.close()

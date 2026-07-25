@@ -45,7 +45,8 @@ class AuthScreen(Screen):
         yield Header()
         yield Vertical(
             Label("AulaVault - Moodle Course Extractor", id="title"),
-            Label("Paso 1: Inicia sesión en https://aulasvirtuales.santotomas.cl en tu navegador", classes="instruction"),
+            Label("Paso 1: Inicia sesión en tu Moodle en el navegador", classes="instruction"),
+            Input(placeholder="URL de tu Moodle (ej: https://moodle.miuniversidad.cl)", id="base-url", value=""),
             Label("Paso 2: Abre DevTools (F12) \u2192 Application \u2192 Cookies \u2192 copia los valores:", classes="instruction"),
             Label("", classes="instruction"),
             Label("\u2022 MoodleSession: el valor de la cookie MoodleSession", classes="hint"),
@@ -63,18 +64,19 @@ class AuthScreen(Screen):
         if event.button.id == "connect-btn":
             session_val = self.query_one("#moodle-session", Input).value.strip()
             sesskey_val = self.query_one("#sesskey", Input).value.strip()
+            base_url_val = self.query_one("#base-url", Input).value.strip().rstrip("/")
             status = self.query_one("#auth-status", Static)
 
-            if not session_val or not sesskey_val:
-                status.update("[red]Ambos campos son obligatorios[/red]")
+            if not session_val or not sesskey_val or not base_url_val:
+                status.update("[red]Todos los campos son obligatorios[/red]")
                 return
 
             status.update("[yellow]Verificando sesión...[/yellow]")
-            self._do_connect(session_val, sesskey_val)
+            self._do_connect(session_val, sesskey_val, base_url_val)
 
     @work(thread=True)
-    def _do_connect(self, session_val: str, sesskey_val: str):
-        data = SessionData(moodle_session=session_val, sesskey=sesskey_val)
+    def _do_connect(self, session_val: str, sesskey_val: str, base_url_val: str):
+        data = SessionData(moodle_session=session_val, sesskey=sesskey_val, base_url=base_url_val)
         ms = MoodleSession(data)
         if ms.verify():
             ms.close()
@@ -431,10 +433,13 @@ class AulaVaultApp(App):
     }
     #auth-container {
         align: center middle;
-        width: 60;
+        width: 80;
         height: auto;
         border: solid $primary;
         padding: 2;
+    }
+    #base-url {
+        width: 100%;
     }
     #title {
         text-style: bold;

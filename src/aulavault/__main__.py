@@ -16,10 +16,11 @@ def main():
 
 def run_headless():
     print("=== AulaVault Headless Debug ===")
+    base_url = input("URL base de Moodle (ej: https://moodle.miuniversidad.cl): ").strip().rstrip("/") or "https://moodle.miuniversidad.cl"
     moodle_session = input("MoodleSession cookie: ").strip()
     sesskey = input("sesskey: ").strip()
 
-    data = SessionData(moodle_session=moodle_session, sesskey=sesskey)
+    data = SessionData(moodle_session=moodle_session, sesskey=sesskey, base_url=base_url)
     ms = MoodleSession(data)
 
     print("\n[1/3] Verificando sesión...")

@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 from ..models import Module, ResolvedModule, ResolvedFile
 from ..session import MoodleSession
 
@@ -18,7 +17,7 @@ def resolve(session: MoodleSession, module: Module) -> ResolvedModule:
         for a in soup.find_all("a", href=True):
             href = a["href"]
             if "/pluginfile.php/" in href and "/assignsubmission_file/" in href:
-                full_url = urljoin("https://aulasvirtuales.santotomas.cl", href)
+                full_url = session.abs_url(href)
                 filename = href.split("/")[-1].split("?")[0]
                 rm.files.append(ResolvedFile(filename=filename, url=full_url))
                 rm.has_content = True
