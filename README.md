@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![Git](https://img.shields.io/badge/Git-2.0%2B-green.svg)](https://git-scm.com/downloads/)
 
-Herramienta para sincronizar, organizar y preservar localmente los recursos educativos disponibles en plataformas Moodle.
+Herramienta para sincronizar y descargar automaticamente todos los recursos educativos disponibles en plataformas Moodle.
 
 AulaVault permite crear una copia local estructurada de sus cursos, incluyendo materiales como:
 
@@ -141,5 +141,3 @@ AulaVault/
 AulaVault fue desarrollado para fines educativos y de productividad personal.
 
 La herramienta está diseñada para trabajar con cuentas autorizadas y acceder únicamente a contenido que el usuario ya puede visualizar dentro de la plataforma.
-
-No busca evadir controles de acceso ni obtener información no autorizada.
