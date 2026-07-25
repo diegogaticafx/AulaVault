@@ -1,33 +1,86 @@
 # 🏛️ AulaVault
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![Git](https://img.shields.io/badge/Git-2.0%2B-green.svg)](https://git-scm.com/downloads/)
 
-**Extrae, estructura y descarga el contenido de tus cursos de Aulas Virtuales Santo Tomás (Moodle) a tu computador.**
+Herramienta para sincronizar, organizar y preservar localmente los recursos educativos disponibles en plataformas Moodle.
 
-Preserva localmente los materiales de tus asignaturas: PDFs, presentaciones, documentos, tareas entregadas, y más.
+AulaVault permite crear una copia local estructurada de sus cursos, incluyendo materiales como:
+
+-   📄 Documentos
+-   📊 Presentaciones
+-   📝 Archivos compartidos
+-   📚 Recursos del curso
+-   📋 Actividades y entregas
+
+El proyecto nació como una solución personal para optimizar y mejorar la gestión de materiales académicos y explorar la arquitectura interna de una plataforma LMS ampliamente utilizada.
 
 ---
-## 🔍 Cómo funciona
 
-AulaVault se basa en **reverse engineering** de las APIs internas de Moodle.
+## 🔍 Descripción técnica
 
-Al encontrar `core_courseformat_get_state`, un endpoint interno que el frontend de Moodle usa para construir la página del curso. Devuelve el árbol completo: curso → secciones → módulos con URLs y metadatos. Lo llamamos directamente desde Python, reutilizando la sesión del navegador (cookie `MoodleSession` + token `sesskey`) para saltarnos el SSO de Microsoft.
+AulaVault funciona mediante el análisis de la comunicación entre el navegador y Moodle para construir una representación local de la estructura del curso.
 
-**Los archivos** se descargan desde `/pluginfile.php`, el servidor privado de Moodle que requiere sesión activa. Cada tipo de módulo se resuelve distinto: `resource` busca links a pluginfile, `assign` parsea la página de la tarea, `url` extrae el destino del redirect, `label` captura el texto HTML.
+El sistema interpreta la información proporcionada por Moodle para reconstruir:
 
-> Este proyecto no usa ninguna API oficial — todo se descubrió observando el tráfico de red con las DevTools del navegador.
+```
+Curso
+ └── Secciones
+      └── Módulos
+           ├── Recursos
+           ├── Actividades
+           ├── Enlaces externos
+           └── Contenido HTML
+```
 
-## ✨ Funcionalidades
+La aplicación utiliza la sesión autenticada del usuario para acceder únicamente a los recursos disponibles dentro de su propia cuenta.
 
--   Interfaz interactiva tipo dashboard (TUI)
--   Listado automático de cursos en los que estás matriculado
--   Vista por secciones con selector de módulos a descargar
--   Descarga de archivos (`resource`), URLs (`url`), tareas (`assign`) y textos (`label`)
+---
+
+## 🏗️ Arquitectura
+
+El proyecto está dividido en módulos independientes:
+
+```
+┌───────────────────────┐
+│ Authentication Layer  │
+│ Gestión de sesión     │
+└──────────┬────────────┘
+           │
+┌──────────▼────────────┐
+│ Course Graph Builder  │
+│ Construcción cursos   │
+└──────────┬────────────┘
+           │
+┌──────────▼────────────┐
+│ Module Resolver       │
+│ Resolución recursos   │
+└──────────┬────────────┘
+           │
+┌──────────▼────────────┐
+│ Download Manager      │
+│ Sincronización local  │
+└───────────────────────┘
+```
+
+---
+
+## ✨ Características
+
+-   ✅ Descubrimiento automático de cursos disponibles
+-   ✅ Construcción del árbol de contenidos
+-   ✅ Selección granular de módulos
+-   ✅ Descarga organizada de recursos
+-   ✅ Soporte para distintos tipos de módulos Moodle: `resource`, `assign`, `url`, `label`
+-   ✅ Interfaz interactiva tipo dashboard (TUI)
+
 ---
 
 ## 📦 Instalación
 
 ### Requisitos
 
--   Python 3.11 o superior
+-   Python 3.12 o superior
 -   Git
 
 ### Pasos
@@ -43,31 +96,11 @@ pip install -e .
 
 ---
 
-## 🚀 Cómo usar
+## 🚀 Uso
 
-### 1. Obtener tus credenciales de Moodle
+### 1. Autenticación
 
-AulaVault no usa contraseña. Necesitas copiar dos valores desde tu navegador:
-
-1.  Inicia sesión en [aulasvirtuales.santotomas.cl](https://aulasvirtuales.santotomas.cl) con tu cuenta institucional (Microsoft SSO).
-
-2.  Abre las herramientas de desarrollador:
-    -   **Chrome/Edge**: `F12` o clic derecho → **Inspeccionar**
-    -   **Firefox**: `F12` o clic derecho → **Inspeccionar elemento**
-
-3.  Ve a la pestaña **Application** (Chrome) o **Storage** (Firefox).
-
-4.  En el panel izquierdo, busca **Cookies** → `https://aulasvirtuales.santotomas.cl`.
-
-5.  Copia estos dos valores:
-
-    | ¿Qué buscas?          | ¿Dónde está?                                       |
-    | --------------------- | -------------------------------------------------- |
-    | **MoodleSession**     | Ve a la pestaña **Application** (Chrome) o **Storage** (Firefox). Donde el **Name** es `MoodleSession` → copia el **Value** |
-    | **sesskey**           | En la pestaña **Network** si filtras por Fetch/XHR encontraras  una Request URL:  https://service.php?sesskey=XXXXXXX&info=core... , debes copiar solo XXXXXXX|
-   
-
-> ⚠️ `MoodleSession` y `sesskey` **cambian cada vez que cierras sesión**. Si deja de funcionar, repite este paso.
+AulaVault utiliza la sesión activa del usuario. Debes iniciar sesión normalmente en tu plataforma Moodle y proporcionar una sesión válida para acceder a los recursos autorizados.
 
 ### 2. Ejecutar
 
@@ -75,17 +108,38 @@ AulaVault no usa contraseña. Necesitas copiar dos valores desde tu navegador:
 python -m aulavault
 ```
 
-Se abrirá una interfaz con dos pasos:
+La aplicación permite:
 
-**Paso 1 — Ingresar credenciales**
-Pega los valores que copiaste en los campos correspondientes y haz clic en **Conectar**.
+-   Visualizar cursos disponibles.
+-   Explorar la estructura de cada curso.
+-   Seleccionar módulos específicos.
+-   Descargar contenido localmente.
 
-**Paso 2 — Seleccionar y descargar**
--   Verás la lista de todos tus cursos.
--   Selecciona un curso y haz clic en **Seleccionar Módulos**.
--   Se mostrará un árbol con las secciones y los módulos disponibles.
--   Marca/desmarca los que quieras descargar usando clic o Enter.
--   Haz clic en **Descargar Seleccionados (N)**.
+---
 
-También puedes descargar todo de golpe con **Descargar Todo**.
+## 📁 Ejemplo de estructura generada
 
+```
+AulaVault/
+│
+├── Programación/
+│   ├── Unidad 1/
+│   │   ├── Introducción.pdf
+│   │   └── ejercicios.pdf
+│   │
+│   └── Unidad 2/
+│       └── presentación.pptx
+│
+└── Base de Datos/
+    └── material.pdf
+```
+
+---
+
+## 🔐 Uso responsable
+
+AulaVault fue desarrollado para fines educativos y de productividad personal.
+
+La herramienta está diseñada para trabajar con cuentas autorizadas y acceder únicamente a contenido que el usuario ya puede visualizar dentro de la plataforma.
+
+No busca evadir controles de acceso ni obtener información no autorizada.
