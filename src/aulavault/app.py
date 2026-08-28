@@ -11,7 +11,6 @@ from .course_graph import fetch_courses, build_course_graph
 from .resolver import resolve_module
 from .resolvers.section_parser import parse_section_html
 from .downloader import download_file
-from .storage import save_course
 
 
 ICONS = {
@@ -245,7 +244,7 @@ class MainScreen(Screen):
 
                 resolved = resolve_module(session, module)
                 for f in resolved.files:
-                    dest_dir = Path("downloads") / sanitize(f"{course.name} {course.id}")
+                    dest_dir = base_dir / sanitize(f"{course.name} {course.id}") / "files"
                     path = download_file(session, f.url, dest_dir / sanitize(f"{module.name}-{module.id}"))
                     if path:
                         f.downloaded = True
@@ -261,7 +260,6 @@ class MainScreen(Screen):
                 resolved_modules.append(resolved)
 
             try:
-                save_course(base_dir, course, resolved_modules)
                 self.app.call_from_thread(
                     log.write,
                     f"[green]  \u2713 Curso guardado en courses/{sanitize(course.name)} {course.id}/[/green]",
@@ -420,7 +418,7 @@ class ModuleSelectScreen(Screen):
 
             resolved = resolve_module(session, module)
             for f in resolved.files:
-                dest_dir = Path("downloads") / sanitize(f"{self.course.name} {self.course.id}")
+                dest_dir = base_dir / sanitize(f"{self.course.name} {self.course.id}") / "files"
                 path = download_file(session, f.url, dest_dir / sanitize(f"{module.name}-{module.id}"))
                 if path:
                     f.downloaded = True
@@ -431,14 +429,10 @@ class ModuleSelectScreen(Screen):
 
             resolved_modules.append(resolved)
 
-        try:
-            save_course(base_dir, self.course, resolved_modules)
-            self.app.call_from_thread(
-                log.write,
-                f"[green]\u2713 Curso guardado en courses/{sanitize(self.course.name)} {self.course.id}/[/green]",
-            )
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[red]\u2717 Error guardando: {e}[/red]")
+        self.app.call_from_thread(
+            log.write,
+            f"[green]\u2713 Curso guardado en courses/{sanitize(self.course.name)} {self.course.id}/[/green]",
+        )
 
         session.close()
         self.app.call_from_thread(progress.update, progress=100)
