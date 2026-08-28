@@ -88,7 +88,7 @@ El proyecto está dividido en módulos independientes:
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/tuusuario/aulavault.git
-cd aulavault
+cd src/
 
 # 2. Instalar dependencias
 pip install -e .
