@@ -1,3 +1,4 @@
+from urllib.parse import unquote
 from bs4 import BeautifulSoup
 from ..models import Module, ResolvedModule, ResolvedFile
 from ..session import MoodleSession
@@ -16,11 +17,17 @@ def resolve(session: MoodleSession, module: Module) -> ResolvedModule:
 
         for a in soup.find_all("a", href=True):
             href = a["href"]
-            if "/pluginfile.php/" in href and "/assignsubmission_file/" in href:
-                full_url = session.abs_url(href)
-                filename = href.split("/")[-1].split("?")[0]
-                rm.files.append(ResolvedFile(filename=filename, url=full_url))
-                rm.has_content = True
+            if "/pluginfile.php/" not in href:
+                continue
+
+            filename = unquote(href.split("/")[-1].split("?")[0].split("#")[0])
+            if not filename or "." not in filename:
+                continue
+
+            full_url = session.abs_url(href)
+            rm.files.append(ResolvedFile(filename=filename, url=full_url))
+            rm.has_content = True
+
     except Exception:
         rm.content_text = f"ERROR fetching assignment: {module.url}"
     return rm
