@@ -9,6 +9,7 @@ from .models import SessionData, Course, Module
 from .session import MoodleSession
 from .course_graph import fetch_courses, build_course_graph
 from .resolver import resolve_module
+from .resolvers.section_parser import parse_section_html
 from .downloader import download_file
 from .storage import save_course
 
@@ -22,6 +23,7 @@ ICONS = {
     "feedback": "\U0001F4CB",
     "quiz": "\U00002753",
     "adaptivequiz": "\U0001F9D0",
+    "section_resource": "\U0001F517",
     "default": "\U0001F4CB",
 }
 
@@ -225,10 +227,16 @@ class MainScreen(Screen):
                 m for s in course.sections for m in s.modules
                 if m.type in ("resource", "url", "assign", "label")
             ]
-            total_modules = len(all_modules)
+
+            section_modules = []
+            for s in course.sections:
+                if s.html_content:
+                    section_modules.extend(parse_section_html(s, session))
+
+            total_modules = len(all_modules) + len(section_modules)
 
             resolved_modules = []
-            for mi, module in enumerate(all_modules):
+            for mi, module in enumerate(all_modules + section_modules):
                 self.app.call_from_thread(
                     status.update,
                     f"{course_name}: [{mi+1}/{total_modules}] {module.type} - {module.name[:60]}",
@@ -320,6 +328,14 @@ class ModuleSelectScreen(Screen):
                 leaf = sec_node.add_leaf(label, data=mod)
                 self.selected[mod.id] = False
 
+            if section.html_content:
+                section_mods = parse_section_html(section, None)
+                for mod in section_mods:
+                    icon = module_icon(mod.type)
+                    label = f"\u2610 {icon} {mod.name} ({mod.type})"
+                    leaf = sec_node.add_leaf(label, data=mod)
+                    self.selected[mod.id] = False
+
         self._update_count()
 
     def on_tree_node_selected(self, event: Tree.NodeSelected):
@@ -385,10 +401,17 @@ class ModuleSelectScreen(Screen):
             m for s in self.course.sections for m in s.modules
             if m.id in selected_ids and m.type in ("resource", "url", "assign", "label")
         ]
-        total = len(all_modules)
+
+        section_modules = []
+        for s in self.course.sections:
+            if s.html_content:
+                section_modules.extend(parse_section_html(s, session))
+
+        selected_section = [m for m in section_modules if m.id in selected_ids]
+        total = len(all_modules) + len(selected_section)
         resolved_modules = []
 
-        for mi, module in enumerate(all_modules):
+        for mi, module in enumerate(all_modules + selected_section):
             self.app.call_from_thread(
                 status.update,
                 f"[{mi+1}/{total}] {module.type} - {module.name[:50]}",
