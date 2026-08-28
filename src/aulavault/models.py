@@ -19,6 +19,7 @@ class Section(BaseModel):
     title: str
     section: int
     modules: list["Module"] = []
+    html_content: str = ""
 
 
 class Module(BaseModel):
@@ -26,6 +27,7 @@ class Module(BaseModel):
     type: str
     name: str
     url: str
+    description: str = ""
 
 
 class ResolvedFile(BaseModel):

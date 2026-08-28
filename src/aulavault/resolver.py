@@ -1,12 +1,13 @@
 from .models import Module, ResolvedModule
 from .session import MoodleSession
-from .resolvers import resource, url_module, assign, label
+from .resolvers import resource, url_module, assign, label, section_resource
 
 RESOLVERS = {
     "resource": resource.resolve,
     "url": url_module.resolve,
     "assign": assign.resolve,
     "label": label.resolve,
+    "section_resource": section_resource.resolve,
 }
 
 

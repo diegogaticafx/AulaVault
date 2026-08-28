@@ -3,6 +3,7 @@ from .models import SessionData
 from .session import MoodleSession
 from .course_graph import fetch_courses, build_course_graph
 from .resolver import resolve_module
+from .resolvers.section_parser import parse_section_html
 
 
 def main():
@@ -57,7 +58,12 @@ def run_headless():
             print(f"  sections={len(graph.sections)}, modules={sum(types.values())}")
             print(f"  types: {types}")
 
-            # Resolve first few modules of each supported type
+            section_count = sum(1 for s in graph.sections if s.html_content)
+            print(f"  sections with HTML content: {section_count}")
+
+            label_with_desc = sum(1 for s in graph.sections for m in s.modules if m.type == "label" and m.description)
+            print(f"  labels with description: {label_with_desc}")
+
             shown = set()
             for s in graph.sections:
                 for m in s.modules:
@@ -86,6 +92,32 @@ def run_headless():
                     if n_files:
                         for f in resolved.files[:3]:
                             print(f"      → {f.filename}")
+                    elif m.type == "label" and m.description:
+                        desc_preview = m.description[:100].replace("\n", " ")
+                        print(f"      desc: {desc_preview}...")
+
+            for s in graph.sections:
+                if s.html_content:
+                    section_mods = parse_section_html(s, ms)
+                    if section_mods:
+                        print(f"\n  Section '{s.title}' - {len(section_mods)} embedded links:")
+                        for m in section_mods[:5]:
+                            resolved = resolve_module(ms, m)
+                            n_files = len(resolved.files)
+                            n_links = len(resolved.links)
+                            mark = ""
+                            if n_files:
+                                mark = f" [green]{n_files} file(s)[/green]"
+                            elif n_links:
+                                mark = f" [blue]{n_links} link(s)[/blue]"
+                            else:
+                                mark = " [red]EMPTY[/red]"
+                            print(f"    [section_resource] {m.name[:60]}{mark}")
+                            if n_files:
+                                for f in resolved.files[:3]:
+                                    print(f"      → {f.filename}")
+                        if len(section_mods) > 5:
+                            print(f"    ... and {len(section_mods) - 5} more")
 
         except Exception as e:
             print(f"  [ERROR] {e}")
