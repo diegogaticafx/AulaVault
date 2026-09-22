@@ -5,6 +5,8 @@
 
 Herramienta para sincronizar y descargar automaticamente todos los recursos educativos disponibles en plataformas Moodle.
 
+![Demo](demo.GIF)
+
 AulaVault permite crear una copia local estructurada de sus cursos, incluyendo materiales como:
 
 -   📄 Documentos
